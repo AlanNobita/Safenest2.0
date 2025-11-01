@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="fas fa-shield-alt"></i>
+            SafeNest Dashboard
+        </h1>
+        <p class="dashboard-subtitle">
+            AI-Powered Smart Home & Architecture Platform with Real-time Analytics
+        </p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-microchip"></i>
+            </div>
+            <div class="stat-value">{{ smart_home_stats.active_devices }}</div>
+            <div class="stat-label">Active Devices</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>12% from last week</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="stat-value">{{ smart_home_stats.security_status }}</div>
+            <div class="stat-label">Security Status</div>
+            <div class="stat-change positive">
+                <i class="fas fa-check-circle"></i>
+                <span>All systems secure</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="stat-value">{{ smart_home_stats.energy_usage }}</div>
+            <div class="stat-label">Energy Usage (kWh)</div>
+            <div class="stat-change negative">
+                <i class="fas fa-arrow-down"></i>
+                <span>8% from last week</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <div class="stat-value">{{ smart_home_stats.automation_rules }}</div>
+            <div class="stat-label">Automation Rules</div>
+            <div class="stat-change positive">
+                <i class="fas fa-plus-circle"></i>
+                <span>3 new this week</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <h2 class="section-title">Real-time Analytics</h2>
+        
+        <div class="charts-grid">
+            <!-- Energy Usage Chart -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">Energy Usage</div>
+                    <div class="chart-actions">
+                        <button class="chart-action" onclick="refreshChart('energy')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="chart-action">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="energyChart" class="chart-canvas"></div>
+            </div>
+
+            <!-- Device Status Chart -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">Device Status</div>
+                    <div class="chart-actions">
+                        <button class="chart-action" onclick="refreshChart('devices')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="chart-action">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="deviceChart" class="chart-canvas"></div>
+            </div>
+
+            <!-- Security Events Chart -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">Security Events</div>
+                    <div class="chart-actions">
+                        <button class="chart-action" onclick="refreshChart('security')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="chart-action">
+                            <i class="fas fa-chart-bar"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="securityChart" class="chart-canvas"></div>
+            </div>
+
+            <!-- AI Architecture Stats -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">AI Architecture</div>
+                    <div class="chart-actions">
+                        <button class="chart-action">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-lg); height: 300px;">
+                    <div class="stat-card" style="padding: var(--spacing-lg);">
+                        <div class="stat-value">{{ architecture_stats.total_projects }}</div>
+                        <div class="stat-label">Total Projects</div>
+                    </div>
+                    <div class="stat-card" style="padding: var(--spacing-lg);">
+                        <div class="stat-value">{{ architecture_stats.ai_generations }}</div>
+                        <div class="stat-label">AI Generations</div>
+                    </div>
+                    <div class="stat-card" style="padding: var(--spacing-lg);">
+                        <div class="stat-value">{{ architecture_stats.featured_architects }}</div>
+                        <div class="stat-label">Featured Architects</div>
+                    </div>
+                    <div class="stat-card" style="padding: var(--spacing-lg);">
+                        <div class="stat-value">{{ architecture_stats.material_estimates }}</div>
+                        <div class="stat-label">Material Estimates</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="charts-section">
+        <h2 class="section-title">Recent Activity</h2>
+        <div class="activity-feed" id="activityFeed">
+            <!-- Activities will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Device Status Grid -->
+    <div class="charts-section">
+        <h2 class="section-title">Device Status</h2>
+        <div class="device-status-grid" id="deviceGrid">
+            <!-- Devices will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="charts-section">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="quick-actions" id="quickActions">
+            <!-- Quick actions will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+console.log('SafeNest Dashboard Loaded');
+</script>
+{% endblock %}

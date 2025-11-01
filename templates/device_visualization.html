@@ -1,0 +1,1030 @@
+{% extends 'base.html' %}
+
+{% block title %}3D Device Visualization - SafeNest Smart Home{% endblock %}
+
+{% block content %}
+<div class="device-visualization-container">
+    <!-- Header Section -->
+    <div class="section-header">
+        <h2 class="section-title">3D Device Visualization</h2>
+        <p class="section-subtitle">Interactive 3D models of your smart home devices</p>
+    </div>
+
+    <!-- Main Visualization Area -->
+    <div class="visualization-main">
+        <!-- 3D Viewer -->
+        <div class="viewer-3d" id="viewer3d">
+            <div class="viewer-controls">
+                <button class="viewer-control" id="resetView" title="Reset View">
+                    <i class="fas fa-home"></i>
+                </button>
+                <button class="viewer-control" id="zoomIn" title="Zoom In">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+                <button class="viewer-control" id="zoomOut" title="Zoom Out">
+                    <i class="fas fa-search-minus"></i>
+                </button>
+                <button class="viewer-control" id="rotateLeft" title="Rotate Left">
+                    <i class="fas fa-undo"></i>
+                </button>
+                <button class="viewer-control" id="rotateRight" title="Rotate Right">
+                    <i class="fas fa-redo"></i>
+                </button>
+                <button class="viewer-control" id="fullscreen" title="Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+            
+            <!-- Loading Indicator -->
+            <div class="viewer-loading" id="viewerLoading">
+                <div class="loading-spinner"></div>
+                <p>Loading 3D model...</p>
+            </div>
+            
+            <!-- 3D Canvas Container -->
+            <div class="viewer-canvas" id="viewerCanvas">
+                <canvas id="threejsCanvas"></canvas>
+            </div>
+            
+            <!-- Device Info Overlay -->
+            <div class="device-info" id="deviceInfo">
+                <h3 id="deviceName">Select a device</h3>
+                <div class="device-details">
+                    <div class="device-detail">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value" id="deviceStatus">-</span>
+                    </div>
+                    <div class="device-detail">
+                        <span class="detail-label">Location:</span>
+                        <span class="detail-value" id="deviceLocation">-</span>
+                    </div>
+                    <div class="device-detail">
+                        <span class="detail-label">Battery:</span>
+                        <span class="detail-value" id="deviceBattery">-</span>
+                    </div>
+                    <div class="device-detail">
+                        <span class="detail-label">Last Activity:</span>
+                        <span class="detail-value" id="deviceActivity">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Device Selection Panel -->
+        <div class="device-selection">
+            <h3 class="panel-title">Devices</h3>
+            <div class="device-categories">
+                <button class="category-btn active" data-category="all">All Devices</button>
+                <button class="category-btn" data-category="lighting">Lighting</button>
+                <button class="category-btn" data-category="security">Security</button>
+                <button class="category-btn" data-category="climate">Climate</button>
+                <button class="category-btn" data-category="entertainment">Entertainment</button>
+                <button class="category-btn" data-category="appliances">Appliances</button>
+            </div>
+            
+            <div class="device-list" id="deviceList">
+                <!-- Devices will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Device Control Panel -->
+    <div class="device-control-panel" id="deviceControlPanel">
+        <h3 class="panel-title">Device Controls</h3>
+        <div class="control-content" id="controlContent">
+            <p style="color: var(--text-muted); text-align: center;">Select a device to control</p>
+        </div>
+    </div>
+
+    <!-- Scene Templates -->
+    <div class="scene-templates">
+        <h3 class="panel-title">Scene Templates</h3>
+        <div class="scene-grid">
+            <div class="scene-card" data-scene="morning">
+                <div class="scene-icon">
+                    <i class="fas fa-sun"></i>
+                </div>
+                <h4>Morning</h4>
+                <p>Gentle wake-up with lights gradually increasing</p>
+            </div>
+            <div class="scene-card" data-scene="away">
+                <div class="scene-icon">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <h4>Away</h4>
+                <p>Security mode with energy savings</p>
+            </div>
+            <div class="scene-card" data-scene="evening">
+                <div class="scene-icon">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <h4>Evening</h4>
+                <p>Relaxing ambiance with dimmed lights</p>
+            </div>
+            <div class="scene-card" data-scene="night">
+                <div class="scene-icon">
+                    <i class="fas fa-bed"></i>
+                </div>
+                <h4>Night</h4>
+                <p>Minimal lighting for safety</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Device Visualization Styles */
+.device-visualization-container {
+    padding: var(--spacing-lg);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.visualization-main {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-3xl);
+}
+
+.viewer-3d {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-2xl);
+    height: 600px;
+    position: relative;
+    overflow: hidden;
+}
+
+.viewer-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+}
+
+.viewer-control {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.viewer-control:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-cyan);
+    transform: scale(1.1);
+}
+
+.viewer-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 50;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(0, 255, 255, 0.1);
+    border-top-color: var(--primary-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.viewer-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.device-info {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    min-width: 250px;
+    z-index: 100;
+}
+
+.device-info h3 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--primary-cyan);
+    font-size: var(--font-size-lg);
+}
+
+.device-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.device-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.detail-label {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+}
+
+.device-selection {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    height: fit-content;
+}
+
+.panel-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-primary);
+}
+
+.device-categories {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+}
+
+.category-btn {
+    background: none;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-align: left;
+}
+
+.category-btn:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-cyan);
+    color: var(--text-primary);
+}
+
+.category-btn.active {
+    background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+    color: white;
+    border-color: transparent;
+}
+
+.device-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.device-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.device-item:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-cyan);
+    transform: translateX(5px);
+}
+
+.device-item.active {
+    background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+    color: white;
+    border-color: transparent;
+}
+
+.device-item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 255, 255, 0.1);
+    color: var(--primary-cyan);
+    flex-shrink: 0;
+}
+
+.device-item.active .device-item-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.device-item-info {
+    flex: 1;
+}
+
+.device-item-name {
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 2px;
+}
+
+.device-item-status {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.device-item.active .device-item-status {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.device-control-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-3xl);
+}
+
+.control-content {
+    display: grid;
+    gap: var(--spacing-lg);
+}
+
+.scene-templates {
+    margin-bottom: var(--spacing-3xl);
+}
+
+.scene-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.scene-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.scene-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-cyan);
+}
+
+.scene-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--spacing-md);
+    font-size: 1.5rem;
+}
+
+.scene-card h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--text-primary);
+}
+
+.scene-card p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .visualization-main {
+        grid-template-columns: 1fr;
+    }
+    
+    .viewer-3d {
+        height: 500px;
+    }
+    
+    .device-selection {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .device-visualization-container {
+        padding: var(--spacing-md);
+    }
+    
+    .viewer-3d {
+        height: 400px;
+    }
+    
+    .device-info {
+        position: static;
+        margin-top: var(--spacing-lg);
+    }
+    
+    .scene-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Device Visualization System
+class DeviceVisualization {
+    constructor() {
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.controls = null;
+        this.devices = [];
+        this.selectedDevice = null;
+        this.deviceMeshes = new Map();
+        this.animationId = null;
+        
+        this.init();
+    }
+
+    init() {
+        this.setupScene();
+        this.setupCamera();
+        this.setupRenderer();
+        this.setupControls();
+        this.setupLights();
+        this.loadDevices();
+        this.setupEventListeners();
+        this.animate();
+        
+        // Hide loading indicator
+        setTimeout(() => {
+            document.getElementById('viewerLoading').style.display = 'none';
+        }, 1000);
+    }
+
+    setupScene() {
+        // This would be replaced with actual Three.js scene setup
+        this.scene = {
+            add: (object) => {
+                console.log('Adding object to scene:', object);
+            },
+            remove: (object) => {
+                console.log('Removing object from scene:', object);
+            }
+        };
+    }
+
+    setupCamera() {
+        // This would be replaced with actual Three.js camera setup
+        this.camera = {
+            position: { x: 0, y: 0, z: 5 },
+            lookAt: (target) => {
+                console.log('Camera looking at:', target);
+            }
+        };
+    }
+
+    setupRenderer() {
+        const canvas = document.getElementById('threejsCanvas');
+        const container = document.getElementById('viewerCanvas');
+        
+        // Set canvas size
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        
+        // This would be replaced with actual Three.js renderer setup
+        this.renderer = {
+            domElement: canvas,
+            render: () => {
+                // Placeholder for actual rendering
+            }
+        };
+    }
+
+    setupControls() {
+        // This would be replaced with actual Three.js controls (OrbitControls)
+        this.controls = {
+            enableDamping: true,
+            dampingFactor: 0.05,
+            rotateSpeed: 0.5,
+            zoomSpeed: 1.2,
+            enablePan: true
+        };
+    }
+
+    setupLights() {
+        // This would be replaced with actual Three.js lights setup
+        const ambientLight = { type: 'ambient', intensity: 0.6 };
+        const directionalLight = { 
+            type: 'directional', 
+            intensity: 0.8, 
+            position: { x: 5, y: 5, z: 5 } 
+        };
+        
+        console.log('Lights added to scene:', ambientLight, directionalLight);
+    }
+
+    loadDevices() {
+        // Mock device data - in a real implementation, this would come from an API
+        this.devices = [
+            {
+                id: 1,
+                name: 'Living Room Smart Light',
+                category: 'lighting',
+                type: 'light',
+                status: 'on',
+                location: 'Living Room',
+                battery: 'N/A',
+                lastActivity: '2 minutes ago',
+                position: { x: -2, y: 0, z: 0 },
+                color: '#00ffff'
+            },
+            {
+                id: 2,
+                name: 'Front Door Camera',
+                category: 'security',
+                type: 'camera',
+                status: 'recording',
+                location: 'Front Door',
+                battery: '85%',
+                lastActivity: 'Just now',
+                position: { x: 2, y: 0, z: 0 },
+                color: '#ff4444'
+            },
+            {
+                id: 3,
+                name: 'Thermostat',
+                category: 'climate',
+                type: 'thermostat',
+                status: 'active',
+                location: 'Hallway',
+                battery: 'N/A',
+                lastActivity: '5 minutes ago',
+                position: { x: 0, y: 0, z: -2 },
+                color: '#44ff44'
+            },
+            {
+                id: 4,
+                name: 'Smart TV',
+                category: 'entertainment',
+                type: 'tv',
+                status: 'standby',
+                location: 'Living Room',
+                battery: 'N/A',
+                lastActivity: '1 hour ago',
+                position: { x: 0, y: 0, z: 2 },
+                color: '#ff44ff'
+            },
+            {
+                id: 5,
+                name: 'Refrigerator',
+                category: 'appliances',
+                type: 'appliance',
+                status: 'on',
+                location: 'Kitchen',
+                battery: 'N/A',
+                lastActivity: '30 minutes ago',
+                position: { x: -1, y: 0, z: 1 },
+                color: '#ffff44'
+            }
+        ];
+        
+        this.renderDeviceList();
+        this.addDevicesToScene();
+    }
+
+    renderDeviceList() {
+        const deviceList = document.getElementById('deviceList');
+        const activeCategory = document.querySelector('.category-btn.active').dataset.category;
+        
+        const filteredDevices = activeCategory === 'all' 
+            ? this.devices 
+            : this.devices.filter(device => device.category === activeCategory);
+        
+        deviceList.innerHTML = filteredDevices.map(device => `
+            <div class="device-item ${this.selectedDevice?.id === device.id ? 'active' : ''}" 
+                 data-device-id="${device.id}">
+                <div class="device-item-icon">
+                    <i class="fas ${this.getDeviceIcon(device.type)}"></i>
+                </div>
+                <div class="device-item-info">
+                    <div class="device-item-name">${device.name}</div>
+                    <div class="device-item-status">${device.status}</div>
+                </div>
+            </div>
+        `).join('');
+        
+        // Add click handlers
+        deviceList.querySelectorAll('.device-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const deviceId = parseInt(item.dataset.deviceId);
+                this.selectDevice(deviceId);
+            });
+        });
+    }
+
+    getDeviceIcon(type) {
+        const icons = {
+            'light': 'fa-lightbulb',
+            'camera': 'fa-video',
+            'thermostat': 'fa-thermometer-half',
+            'tv': 'fa-tv',
+            'appliance': 'fa-blender'
+        };
+        return icons[type] || 'fa-cube';
+    }
+
+    addDevicesToScene() {
+        // This would be replaced with actual Three.js mesh creation
+        this.devices.forEach(device => {
+            // Create a placeholder representation
+            const mesh = {
+                id: device.id,
+                device: device,
+                type: device.type,
+                position: device.position,
+                color: device.color,
+                status: device.status,
+                update: () => {
+                    // Placeholder for animation updates
+                }
+            };
+            
+            this.deviceMeshes.set(device.id, mesh);
+            this.scene.add(mesh);
+        });
+    }
+
+    selectDevice(deviceId) {
+        // Update selected device
+        this.selectedDevice = this.devices.find(d => d.id === deviceId);
+        
+        // Update UI
+        document.querySelectorAll('.device-item').forEach(item => {
+            item.classList.toggle('active', parseInt(item.dataset.deviceId) === deviceId);
+        });
+        
+        // Update device info
+        this.updateDeviceInfo();
+        
+        // Update control panel
+        this.updateControlPanel();
+        
+        // Focus camera on device
+        this.focusOnDevice(this.selectedDevice);
+        
+        // Highlight device in 3D scene
+        this.highlightDevice(deviceId);
+    }
+
+    updateDeviceInfo() {
+        if (!this.selectedDevice) return;
+        
+        document.getElementById('deviceName').textContent = this.selectedDevice.name;
+        document.getElementById('deviceStatus').textContent = this.selectedDevice.status;
+        document.getElementById('deviceLocation').textContent = this.selectedDevice.location;
+        document.getElementById('deviceBattery').textContent = this.selectedDevice.battery;
+        document.getElementById('deviceActivity').textContent = this.selectedDevice.lastActivity;
+    }
+
+    updateControlPanel() {
+        if (!this.selectedDevice) return;
+        
+        const controlContent = document.getElementById('controlContent');
+        
+        // Generate controls based on device type
+        let controlsHTML = '';
+        
+        switch(this.selectedDevice.type) {
+            case 'light':
+                controlsHTML = `
+                    <div class="control-group">
+                        <label class="control-label">Power</label>
+                        <div class="control-switch">
+                            <input type="checkbox" id="powerSwitch" ${this.selectedDevice.status === 'on' ? 'checked' : ''}>
+                            <label for="powerSwitch" class="switch"></label>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Brightness</label>
+                        <input type="range" class="control-slider" min="0" max="100" value="75">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Color</label>
+                        <input type="color" class="control-color" value="${this.selectedDevice.color}">
+                    </div>
+                `;
+                break;
+                
+            case 'thermostat':
+                controlsHTML = `
+                    <div class="control-group">
+                        <label class="control-label">Temperature</label>
+                        <div class="temperature-control">
+                            <button class="temp-btn" onclick="adjustTemperature(-1)">-</button>
+                            <span class="temp-value">22°C</span>
+                            <button class="temp-btn" onclick="adjustTemperature(1)">+</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Mode</label>
+                        <select class="control-select">
+                            <option>Auto</option>
+                            <option>Heat</option>
+                            <option>Cool</option>
+                            <option>Off</option>
+                        </select>
+                    </div>
+                `;
+                break;
+                
+            case 'camera':
+                controlsHTML = `
+                    <div class="control-group">
+                        <label class="control-label">Recording</label>
+                        <div class="control-switch">
+                            <input type="checkbox" id="recordSwitch" ${this.selectedDevice.status === 'recording' ? 'checked' : ''}>
+                            <label for="recordSwitch" class="switch"></label>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Night Vision</label>
+                        <div class="control-switch">
+                            <input type="checkbox">
+                            <label class="switch"></label>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">View Live</label>
+                        <button class="btn btn-primary">Open Stream</button>
+                    </div>
+                `;
+                break;
+                
+            default:
+                controlsHTML = `
+                    <div class="control-group">
+                        <label class="control-label">Power</label>
+                        <div class="control-switch">
+                            <input type="checkbox" id="powerSwitch" ${this.selectedDevice.status === 'on' ? 'checked' : ''}>
+                            <label for="powerSwitch" class="switch"></label>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <button class="btn btn-primary">Device Settings</button>
+                    </div>
+                `;
+        }
+        
+        controlContent.innerHTML = controlsHTML;
+    }
+
+    focusOnDevice(device) {
+        // This would be replaced with actual camera animation
+        console.log('Focusing on device:', device.name);
+        
+        // Animate camera to device position
+        if (this.camera && this.controls) {
+            // Placeholder for camera animation
+            this.camera.lookAt(device.position);
+        }
+    }
+
+    highlightDevice(deviceId) {
+        // Reset all highlights
+        this.deviceMeshes.forEach(mesh => {
+            mesh.highlighted = false;
+        });
+        
+        // Highlight selected device
+        const selectedMesh = this.deviceMeshes.get(deviceId);
+        if (selectedMesh) {
+            selectedMesh.highlighted = true;
+        }
+    }
+
+    setupEventListeners() {
+        // Category buttons
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.renderDeviceList();
+            });
+        });
+        
+        // Scene cards
+        document.querySelectorAll('.scene-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const scene = card.dataset.scene;
+                this.activateScene(scene);
+            });
+        });
+        
+        // Viewer controls
+        document.getElementById('resetView').addEventListener('click', () => {
+            this.resetView();
+        });
+        
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            this.zoom(1.2);
+        });
+        
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            this.zoom(0.8);
+        });
+        
+        document.getElementById('rotateLeft').addEventListener('click', () => {
+            this.rotate(-45);
+        });
+        
+        document.getElementById('rotateRight').addEventListener('click', () => {
+            this.rotate(45);
+        });
+        
+        document.getElementById('fullscreen').addEventListener('click', () => {
+            this.toggleFullscreen();
+        });
+        
+        // Window resize
+        window.addEventListener('resize', () => {
+            this.handleResize();
+        });
+    }
+
+    activateScene(sceneName) {
+        console.log('Activating scene:', sceneName);
+        
+        // Show notification
+        const scenes = {
+            morning: 'Morning scene activated',
+            away: 'Away scene activated',
+            evening: 'Evening scene activated',
+            night: 'Night scene activated'
+        };
+        
+        notificationSystem.info('Scene Changed', scenes[sceneName]);
+        
+        // This would control actual devices in a real implementation
+        // For now, we'll just update the visual representation
+        this.updateSceneVisuals(sceneName);
+    }
+
+    updateSceneVisuals(sceneName) {
+        // This would update the 3D scene based on the selected scene
+        console.log('Updating scene visuals for:', sceneName);
+        
+        // Example: Change lighting based on scene
+        const sceneSettings = {
+            morning: { ambient: 0.7, color: '#ffffcc' },
+            away: { ambient: 0.3, color: '#ccccff' },
+            evening: { ambient: 0.5, color: '#ffcc99' },
+            night: { ambient: 0.2, color: '#99ccff' }
+        };
+        
+        const settings = sceneSettings[sceneName];
+        if (settings) {
+            // Update scene lighting
+            console.log('Setting ambient light to:', settings.ambient);
+            console.log('Setting scene color to:', settings.color);
+        }
+    }
+
+    resetView() {
+        // Reset camera position and controls
+        if (this.camera && this.controls) {
+            this.camera.position.set(0, 0, 5);
+            this.camera.lookAt(0, 0, 0);
+            // Reset controls would go here
+        }
+    }
+
+    zoom(factor) {
+        if (this.camera) {
+            this.camera.position.multiplyScalar(factor);
+        }
+    }
+
+    rotate(degrees) {
+        if (this.controls) {
+            // Rotate camera around the scene
+            const radians = degrees * Math.PI / 180;
+            // Rotation logic would go here
+        }
+    }
+
+    toggleFullscreen() {
+        const container = document.getElementById('viewer3d');
+        if (!document.fullscreenElement) {
+            container.requestFullscreen().catch(err => {
+                console.error('Error attempting to enable fullscreen:', err);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    handleResize() {
+        const canvas = document.getElementById('threejsCanvas');
+        const container = document.getElementById('viewerCanvas');
+        
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        
+        // Update camera aspect ratio and renderer size
+        if (this.camera && this.renderer) {
+            // Resize logic would go here
+        }
+    }
+
+    animate() {
+        this.animationId = requestAnimationFrame(() => this.animate());
+        
+        // Update animations
+        this.deviceMeshes.forEach(mesh => {
+            mesh.update();
+        });
+        
+        // Render scene
+        if (this.renderer) {
+            this.renderer.render();
+        }
+    }
+
+    destroy() {
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+        }
+        
+        // Clean up Three.js objects
+        if (this.renderer) {
+            this.renderer.dispose();
+        }
+    }
+}
+
+// Initialize device visualization when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    const visualization = new DeviceVisualization();
+    
+    // Make it globally accessible for debugging
+    window.deviceVisualization = visualization;
+    
+    // Show welcome notification
+    setTimeout(() => {
+        notificationSystem.info('3D Visualization Ready', 'Explore your smart home devices in 3D');
+    }, 1500);
+});
+
+// Helper functions for device controls
+function adjustTemperature(delta) {
+    const tempElement = document.querySelector('.temp-value');
+    if (tempElement) {
+        const currentTemp = parseInt(tempElement.textContent);
+        const newTemp = Math.max(16, Math.min(30, currentTemp + delta));
+        tempElement.textContent = `${newTemp}°C`;
+    }
+}
+</script>
+{% endblock %}

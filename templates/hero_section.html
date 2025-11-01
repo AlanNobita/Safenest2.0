@@ -1,0 +1,58 @@
+{% load static %}
+<!-- Hero Section with Parallax Effects -->
+<section class="hero-section">
+  <!-- Animated Background -->
+  <div class="hero-bg">
+    <div class="hero-element">
+      <i class="fas fa-home"></i>
+    </div>
+    <div class="hero-element">
+      <i class="fas fa-shield-alt"></i>
+    </div>
+    <div class="hero-element">
+      <i class="fas fa-robot"></i>
+    </div>
+    <div class="hero-element">
+      <i class="fas fa-cube"></i>
+    </div>
+  </div>
+  
+  <!-- Floating Background Shapes -->
+  <div class="bg-shape bg-shape-1"></div>
+  <div class="bg-shape bg-shape-2"></div>
+  <div class="bg-shape bg-shape-3"></div>
+  
+  <!-- Hero Content -->
+  <div class="hero-content">
+    <h1 class="hero-title">{{ title }}</h1>
+    <h2 class="hero-subtitle">{{ subtitle }}</h2>
+    <p class="hero-description">{{ description }}</p>
+    
+    <!-- Call to Action Buttons -->
+    <div class="hero-cta">
+      {% for button in cta_buttons %}
+      <a href="{{ button.url }}" class="btn btn-primary btn-interactive">
+        <i class="{{ button.icon }}"></i>
+        {{ button.text }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Parallax Section for Additional Content -->
+{% if parallax_content %}
+<div class="parallax-container">
+  <div class="parallax-layer parallax-layer-back">
+    <img src="{% static parallax_content.background_image %}" alt="Background" style="width: 100%; height: 100%; object-fit: cover;">
+  </div>
+  <div class="parallax-layer parallax-layer-base">
+    <div class="container" style="height: 100%; display: flex; align-items: center; justify-content: center;">
+      <div class="text-center" style="background: rgba(15, 23, 42, 0.8); padding: 3rem; border-radius: 1rem; backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 255, 0.2);">
+        <h2 style="color: #00ffff; margin-bottom: 1rem; font-size: 2rem;">{{ parallax_content.title }}</h2>
+        <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.2rem;">{{ parallax_content.text }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}

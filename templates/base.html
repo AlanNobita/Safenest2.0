@@ -1,0 +1,333 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SafeNest - AI-Powered Smart Home & Architecture Platform{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Load critical CSS inline for fastest rendering -->
+    <link href="{% static 'css/modals.css' %}" rel="stylesheet">
+    
+    <!-- Critical CSS for above-the-fold content -->
+    <link rel="stylesheet" href="{% static 'css/critical.css' %}">
+    
+    <!-- Preload non-critical CSS -->
+    <link rel="preload" href="{% static 'css/main.css' %}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{% static 'css/main.css' %}"></noscript>
+    
+    <!-- Preload fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+</head>
+<body>
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="/" class="nav-brand" aria-label="SafeNest Home">
+                <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                <span>SafeNest</span>
+            </a>
+            
+            <!-- Desktop Navigation -->
+            <div class="nav-menu" id="primary-menu">
+                <!-- Smart Home IoT Dropdown -->
+                <div class="nav-dropdown" role="menuitem">
+                    <button class="nav-dropdown-toggle" role="button" aria-expanded="false" aria-controls="smart-home-menu">
+                        <i class="fas fa-home" aria-hidden="true"></i>
+                        Smart Home
+                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+                    <div class="nav-dropdown-menu" id="smart-home-menu" role="menu">
+                        <a href="/devices/" class="nav-dropdown-item" role="menuitem">
+                            <i class="fas fa-microchip" aria-hidden="true"></i> Devices
+                        </a>
+                        <a href="/security/" class="nav-dropdown-item" role="menuitem">
+                            <i class="fas fa-shield-alt" aria-hidden="true"></i> Security
+                        </a>
+                        <a href="/energy/" class="nav-dropdown-item" role="menuitem">
+                            <i class="fas fa-bolt" aria-hidden="true"></i> Energy
+                        </a>
+                        <a href="/automation/" class="nav-dropdown-item" role="menuitem">
+                            <i class="fas fa-cogs" aria-hidden="true"></i> Automation
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- AI Architecture Dropdown -->
+                <div class="nav-dropdown" role="menuitem">
+                    <button class="nav-dropdown-toggle" role="button" aria-expanded="false" aria-controls="ai-architecture-menu">
+                        <i class="fas fa-cube" aria-hidden="true"></i>
+                        AI Architecture
+                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+                    <div class="nav-dropdown-menu" id="ai-architecture-menu" role="menu">
+                        <a href="/architecture/" class="nav-dropdown-item" role="menuitem">
+                            <i class="fas fa-magic" aria-hidden="true"></i> AI Generator
+                        </a>
+                        <a href="/materials/" class="nav-dropdown-item" role="menuitem">
+                            <i class="fas fa-calculator" aria-hidden="true"></i> Materials
+                        </a>
+                        <a href="/architects/" class="nav-dropdown-item" role="menuitem">
+                            <i class="fas fa-users" aria-hidden="true"></i> Architects
+                        </a>
+                        <a href="/consultation/" class="nav-dropdown-item" role="menuitem">
+                            <i class="fas fa-comments" aria-hidden="true"></i> Consultation
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- AI Assistant -->
+                <a href="/ai/" class="nav-link" role="menuitem">
+                    <i class="fas fa-robot" aria-hidden="true"></i> AI Assistant
+                </a>
+            </div>
+
+            <!-- Navigation Actions -->
+            <div class="nav-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false">
+                    <i class="fas fa-moon" aria-hidden="true"></i>
+                </button>
+                <div class="user-menu">
+                    <a href="/accounts/login/" class="btn btn-primary">Login</a>
+                </div>
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-expanded="false" aria-controls="primary-menu" aria-label="Toggle navigation menu">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content" class="main-content" role="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Notification System -->
+    <div id="notification-root"></div>
+
+    <!-- Inline critical JavaScript for fastest interaction -->
+    <script>
+        // Enhanced theme management with system preference detection
+        function initializeTheme() {
+            const html = document.documentElement;
+            const themeToggle = document.querySelector('.theme-toggle');
+            let currentTheme = html.getAttribute('data-theme');
+            
+            // Check for saved theme preference or system preference
+            if (!localStorage.getItem('theme')) {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                currentTheme = prefersDark ? 'dark' : 'light';
+            } else {
+                currentTheme = localStorage.getItem('theme');
+            }
+            
+            // Apply theme
+            html.setAttribute('data-theme', currentTheme);
+            
+            // Update theme toggle
+            if (themeToggle) {
+                const icon = themeToggle.querySelector('i');
+                if (icon) {
+                    icon.className = currentTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+                }
+                themeToggle.setAttribute('aria-pressed', currentTheme === 'light');
+            }
+            
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem('theme')) {
+                    const newTheme = e.matches ? 'dark' : 'light';
+                    html.setAttribute('data-theme', newTheme);
+                    
+                    if (themeToggle) {
+                        const icon = themeToggle.querySelector('i');
+                        if (icon) {
+                            icon.className = newTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+                        }
+                        themeToggle.setAttribute('aria-pressed', newTheme === 'light');
+                    }
+                }
+            });
+            
+            return currentTheme;
+        }
+        
+        // Mobile navigation toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize theme first
+            initializeTheme();
+            
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const primaryMenu = document.getElementById('primary-menu');
+            
+            if (mobileMenuToggle && primaryMenu) {
+                mobileMenuToggle.addEventListener('click', function() {
+                    const isOpen = this.getAttribute('aria-expanded') === 'true';
+                    this.setAttribute('aria-expanded', !isOpen);
+                    primaryMenu.classList.toggle('mobile-open');
+                });
+                
+                // Close mobile menu when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!mobileMenuToggle.contains(event.target) && !primaryMenu.contains(event.target)) {
+                        if (primaryMenu.classList.contains('mobile-open')) {
+                            mobileMenuToggle.setAttribute('aria-expanded', 'false');
+                            primaryMenu.classList.remove('mobile-open');
+                        }
+                    }
+                });
+            }
+            
+            // Enhanced theme toggle functionality
+            const themeToggle = document.querySelector('.theme-toggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    const isPressed = this.getAttribute('aria-pressed') === 'true';
+                    this.setAttribute('aria-pressed', !isPressed);
+                    
+                    // Toggle theme
+                    const html = document.documentElement;
+                    const currentTheme = html.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                    
+                    html.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    
+                    // Update icon with animation
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.style.transform = 'rotate(360deg)';
+                        icon.className = newTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+                        
+                        // Reset transform after animation
+                        setTimeout(() => {
+                            icon.style.transform = '';
+                        }, 300);
+                    }
+                    
+                    // Add theme change animation to body
+                    document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+                });
+            }
+            
+            // Enhanced dropdown menu functionality
+            const dropdownToggles = document.querySelectorAll('.nav-dropdown-toggle');
+            dropdownToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const isOpen = this.getAttribute('aria-expanded') === 'true';
+                    this.setAttribute('aria-expanded', !isOpen);
+                    
+                    // Close other dropdowns
+                    dropdownToggles.forEach(otherToggle => {
+                        if (otherToggle !== this) {
+                            otherToggle.setAttribute('aria-expanded', 'false');
+                            otherToggle.nextElementSibling.classList.remove('show');
+                        }
+                    });
+                    
+                    // Toggle current dropdown
+                    const dropdownMenu = this.nextElementSibling;
+                    if (isOpen) {
+                        dropdownMenu.classList.remove('show');
+                    } else {
+                        dropdownMenu.classList.add('show');
+                    }
+                });
+            });
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.nav-dropdown')) {
+                    dropdownToggles.forEach(toggle => {
+                        toggle.setAttribute('aria-expanded', 'false');
+                        toggle.nextElementSibling.classList.remove('show');
+                    });
+                }
+            });
+            
+            // Add scroll effect to navigation
+            let lastScrollTop = 0;
+            window.addEventListener('scroll', function() {
+                const navbar = document.querySelector('.navbar');
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                
+                if (scrollTop > lastScrollTop && scrollTop > 100) {
+                    // Scrolling down
+                    navbar.style.transform = 'translateY(-100%)';
+                } else {
+                    // Scrolling up
+                    navbar.style.transform = 'translateY(0)';
+                }
+                
+                lastScrollTop = scrollTop;
+                
+                // Add scrolled class for styling
+                if (scrollTop > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+            
+            // Initialize scroll reveal animations
+            initializeScrollReveal();
+            
+            console.log('SafeNest initialized successfully with enhanced features!');
+        });
+        
+        // Scroll reveal functionality
+        function initializeScrollReveal() {
+            const reveals = document.querySelectorAll('.scroll-reveal, .fade-in, .scale-in');
+            
+            function reveal() {
+                reveals.forEach(element => {
+                    const windowHeight = window.innerHeight;
+                    const elementTop = element.getBoundingClientRect().top;
+                    const elementVisible = 150;
+                    
+                    if (elementTop < windowHeight - elementVisible) {
+                        element.classList.add('active');
+                    }
+                });
+            }
+            
+            // Initial check
+            reveal();
+            
+            // Check on scroll
+            window.addEventListener('scroll', reveal);
+        }
+        
+        // Enhanced smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+    
+    <!-- Load non-critical JavaScript with defer -->
+    <script src="{% static 'js/main.js' %}" defer></script>
+    
+    <!-- Load notification system -->
+    <script src="{% static 'js/notifications.js' %}" defer></script>
+    
+    <!-- Load dashboard charts -->
+    <script src="{% static 'js/dashboard-charts.js' %}" defer></script>
+    
+    <!-- Load performance monitoring script -->
+    <script src="{% static 'js/performance-monitor.js' %}" defer></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

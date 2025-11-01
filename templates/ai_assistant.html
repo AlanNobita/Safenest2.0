@@ -1,0 +1,482 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Assistant - SafeNest Smart Home{% endblock %}
+
+{% block content %}
+<div class="ai-chat-container">
+    
+    <!-- AI Assistant Header -->
+    <div class="chat-header">
+        <div class="chat-header-content">
+            <div>
+                <h2 class="chat-title">
+                    <i class="fas fa-shield-alt"></i>
+                    SafeNest AI Assistant
+                </h2>
+                <p class="chat-subtitle">Your intelligent companion for smart home control and architectural design</p>
+            </div>
+            <div class="chat-status">
+                <div class="status-indicator"></div>
+                <span>AI Online</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chat Interface -->
+    <div class="chat-wrapper">
+        
+        <!-- Chat Messages Area -->
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages will be added here dynamically -->
+        </div>
+        
+        <!-- Chat Input Area -->
+        <div class="chat-input-container">
+            <textarea
+                id="chatInput"
+                class="chat-input"
+                placeholder="Type your message here... (e.g., 'Turn on the lights' or 'Design a modern kitchen')"
+                rows="1"
+            ></textarea>
+            <div class="chat-input-buttons">
+                <button id="voiceBtn" class="chat-button voice" title="Voice Input">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button onclick="sendMessage()" class="chat-button primary" title="Send Message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button onclick="quickAction('lights')" class="quick-action">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Toggle Lights</span>
+                </button>
+                <button onclick="quickAction('security')" class="quick-action">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Security Status</span>
+                </button>
+                <button onclick="quickAction('temperature')" class="quick-action">
+                    <i class="fas fa-thermometer-half"></i>
+                    <span>Temperature</span>
+                </button>
+                <button onclick="quickAction('energy')" class="quick-action">
+                    <i class="fas fa-bolt"></i>
+                    <span>Energy Status</span>
+                </button>
+                <button onclick="quickAction('design')" class="quick-action">
+                    <i class="fas fa-drafting-compass"></i>
+                    <span>Design Help</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Capabilities Info -->
+    <div class="grid-3">
+        <div class="card">
+            <h3 style="color: var(--primary-cyan); margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: var(--spacing-sm);">
+                <i class="fas fa-home"></i>
+                Smart Home Control
+            </h3>
+            <ul style="color: var(--text-secondary); line-height: 1.8; margin: 0; padding-left: var(--spacing-lg);">
+                <li>Control lights, temperature, and devices</li>
+                <li>Monitor energy usage and optimization</li>
+                <li>Manage security systems and alerts</li>
+                <li>Set up automated routines</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3 style="color: var(--primary-cyan); margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: var(--spacing-sm);">
+                <i class="fas fa-drafting-compass"></i>
+                Architecture & Design
+            </h3>
+            <ul style="color: var(--text-secondary); line-height: 1.8; margin: 0; padding-left: var(--spacing-lg);">
+                <li>Generate floor plans and 3D models</li>
+                <li>Recommend materials and layouts</li>
+                <li>Building code compliance assistance</li>
+                <li>Cost estimation and planning</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3 style="color: var(--primary-cyan); margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: var(--spacing-sm);">
+                <i class="fas fa-robot"></i>
+                AI Features
+            </h3>
+            <ul style="color: var(--text-secondary); line-height: 1.8; margin: 0; padding-left: var(--spacing-lg);">
+                <li>Natural language processing</li>
+                <li>Voice command recognition</li>
+                <li>Predictive analytics</li>
+                <li>Personalized recommendations</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// Chat functionality
+let chatHistory = [];
+let isProcessing = false;
+
+// Initialize chat
+function initChat() {
+    addWelcomeMessage();
+    checkOpenRouterStatus();
+    setupAutoResize();
+    setupVoiceRecognition();
+    setupKeyboardShortcuts();
+}
+
+// Add welcome message
+function addWelcomeMessage() {
+    const welcomeMessage = {
+        type: 'bot',
+        content: 'Hello! I\'m your SafeNest AI Assistant. I can help you with smart home control, architectural design, answer questions about your devices, and provide insights about your home. How can I assist you today?',
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    };
+    
+    addMessageToChat(welcomeMessage);
+    chatHistory.push(welcomeMessage);
+}
+
+// Add message to chat
+function addMessageToChat(message) {
+    const messagesContainer = document.getElementById('chatMessages');
+    if (!messagesContainer) return;
+    
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${message.type}`;
+    messageElement.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas ${message.type === 'bot' ? 'fa-robot' : 'fa-user'}"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-text">${message.content}</div>
+            <div class="message-time">${message.timestamp}</div>
+        </div>
+    `;
+    
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Add scroll reveal animation
+    setTimeout(() => {
+        messageElement.classList.add('scroll-reveal', 'active');
+    }, 10);
+}
+
+// Show typing indicator
+function showTypingIndicator() {
+    const messagesContainer = document.getElementById('chatMessages');
+    if (!messagesContainer) return;
+    
+    const typingElement = document.createElement('div');
+    typingElement.className = 'message bot typing-indicator';
+    typingElement.id = 'typingIndicator';
+    typingElement.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+    
+    messagesContainer.appendChild(typingElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Remove typing indicator
+function removeTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+// Send message
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message || isProcessing) return;
+    
+    // Add user message
+    const userMessage = {
+        type: 'user',
+        content: message,
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    };
+    
+    addMessageToChat(userMessage);
+    chatHistory.push(userMessage);
+    
+    // Clear input
+    input.value = '';
+    input.style.height = 'auto';
+    
+    // Show typing indicator
+    isProcessing = true;
+    showTypingIndicator();
+    
+    // Send to backend
+    fetch('/api/ai/chat/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            message: message,
+            history: chatHistory.slice(-5) // Send last 5 messages for context
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        removeTypingIndicator();
+        
+        if (data.response) {
+            const botMessage = {
+                type: 'bot',
+                content: data.response,
+                timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            };
+            
+            addMessageToChat(botMessage);
+            chatHistory.push(botMessage);
+        }
+        
+        if (data.actions) {
+            handleAIActions(data.actions);
+        }
+    })
+    .catch(error => {
+        console.error('Chat error:', error);
+        removeTypingIndicator();
+        
+        const errorMessage = {
+            type: 'bot',
+            content: 'I apologize, but I encountered an error. Please try again later.',
+            timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        };
+        
+        addMessageToChat(errorMessage);
+        showNotification('Error connecting to AI service', 'error');
+    })
+    .finally(() => {
+        isProcessing = false;
+    });
+}
+
+// Quick action buttons
+function quickAction(action) {
+    const actions = {
+        'lights': 'Please provide information about the current status of lights in my home.',
+        'security': 'What is the current security status of my home?',
+        'temperature': 'What is the current temperature in my home?',
+        'energy': 'Show me my current energy usage and optimization suggestions.',
+        'design': 'I need help with architectural design for my new home renovation.'
+    };
+    
+    const input = document.getElementById('chatInput');
+    input.value = actions[action] || 'Tell me more about SafeNest features.';
+    input.focus();
+    
+    // Add visual feedback
+    event.target.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        event.target.style.transform = '';
+    }, 150);
+}
+
+// Handle AI actions
+function handleAIActions(actions) {
+    actions.forEach(action => {
+        switch(action.type) {
+            case 'notification':
+                showNotification(action.message, action.severity || 'info');
+                break;
+            case 'device_control':
+                showNotification(`Device ${action.device} ${action.action}`, 'success');
+                break;
+            case 'update_ui':
+                // Update specific UI elements based on action
+                break;
+        }
+    });
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const colors = {
+        'info': 'var(--primary-cyan)',
+        'success': 'var(--success)',
+        'warning': 'var(--warning)',
+        'error': 'var(--danger)'
+    };
+    
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid ${colors[type]};
+        color: var(--text-primary);
+        padding: 15px 20px;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+        max-width: 300px;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Setup auto-resize for textarea
+function setupAutoResize() {
+    const textarea = document.getElementById('chatInput');
+    if (!textarea) return;
+    
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+    });
+}
+
+// Setup voice recognition
+function setupVoiceRecognition() {
+    const voiceBtn = document.getElementById('voiceBtn');
+    if (!voiceBtn || !('webkitSpeechRecognition' in window)) return;
+    
+    const recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    
+    recognition.onstart = function() {
+        voiceBtn.classList.add('active');
+        voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+    };
+    
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('chatInput').value = transcript;
+    };
+    
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        voiceBtn.classList.remove('active');
+        voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        showNotification('Voice recognition error', 'error');
+    };
+    
+    recognition.onend = function() {
+        voiceBtn.classList.remove('active');
+        voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+    };
+    
+    voiceBtn.addEventListener('click', function() {
+        if (voiceBtn.classList.contains('active')) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    });
+}
+
+// Setup keyboard shortcuts
+function setupKeyboardShortcuts() {
+    const chatInput = document.getElementById('chatInput');
+    if (!chatInput) return;
+    
+    chatInput.addEventListener('keydown', function(e) {
+        // Enter to send, Shift+Enter for new line
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+        
+        // Ctrl/Cmd + K to focus input
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            chatInput.focus();
+        }
+        
+        // Escape to clear
+        if (e.key === 'Escape') {
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+        }
+    });
+}
+
+// Get CSRF token
+function getCsrfToken() {
+    const token = document.querySelector('meta[name="csrf-token"]');
+    return token ? token.getAttribute('content') : '';
+}
+
+// Check OpenRouter status
+function checkOpenRouterStatus() {
+    fetch('/api/ai/status/')
+        .then(response => response.json())
+        .then(data => {
+            const statusIndicator = document.querySelector('.status-indicator');
+            if (statusIndicator) {
+                if (data.openrouter_available) {
+                    statusIndicator.style.background = '#00ff00';
+                    // You could add a tooltip or status text here
+                } else {
+                    statusIndicator.style.background = '#ffa500';
+                }
+            }
+        })
+        .catch(error => {
+            console.log('Status check failed:', error);
+            const statusIndicator = document.querySelector('.status-indicator');
+            if (statusIndicator) {
+                statusIndicator.style.background = '#ff4444';
+            }
+        });
+}
+
+// Focus on input when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        initChat();
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+            chatInput.focus();
+        }
+    }, 500);
+});
+
+// Clear chat function
+function clearChat() {
+    const messagesContainer = document.getElementById('chatMessages');
+    if (messagesContainer) {
+        messagesContainer.innerHTML = '';
+        chatHistory = [];
+        addWelcomeMessage();
+        showNotification('Chat cleared', 'info');
+    }
+}
+</script>
+{% endblock %}
